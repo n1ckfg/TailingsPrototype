@@ -32,7 +32,6 @@ float ISO_THRESHOLD = 0.1;
 float NS=0.03;
 Vec3D SCALE2 = new Vec3D(1,1,1).scaleSelf(400);
 
-boolean seedDebug = true;
 boolean isWireframe = false;
 float currScale = 1;
 
@@ -63,7 +62,7 @@ void noiseDraw() {
     } 
   }
   */
-  if (wp.sp.changed || (seedDebug && random(1) < 0.01)) {
+  if (wp.sp.changed) {
     wp.sp.changed = false;
     int loc = (int) random(volumeData.length);
     float val = 1;

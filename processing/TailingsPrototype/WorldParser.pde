@@ -12,6 +12,9 @@ class WorldParser {
   int lastSeedUpdate = 0;
   int refreshEnvironmentInterval = 24*60*60*1000; // once per day;
   int lastEnvironmentUpdate = 0;
+
+  boolean seedDebug = false;
+  float seedDebugOdds = 0.006;
       
   WorldParser() {
     ep = new EnvironmentParser();
@@ -50,9 +53,13 @@ class WorldParser {
     try {
       sp.update();  
       refreshSeedInterval = refreshSeedIntervalOrig;
+      seedDebug = false;
     } catch (Exception e) { 
       refreshSeedInterval = refreshSeedIntervalTimeout;
+      seedDebug = true;
     }
+    
+    if (seedDebug && random(1) < seedDebugOdds) sp.changed = true;
     lastSeedUpdate = millis();
   }
   
