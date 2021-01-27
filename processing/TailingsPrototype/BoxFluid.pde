@@ -46,50 +46,56 @@ GravityBehavior3D gravity;
 VolumetricSpaceArray volume;
 IsoSurface surface1;
 
-TriangleMesh mesh = new TriangleMesh("fluid");
+TriangleMesh mesh1 = new TriangleMesh("fluid");
 
 boolean isWireFrame = false;
 boolean isClosed = true;
 boolean useBoundary = true;
 
 Vec3D colAmp = new Vec3D(400, 200, 200);
+PGraphics3D layer1;
 
 void boxFluidSetup() {
   initPhysics();
   volume = new VolumetricSpaceArray(SCALE,GRID,GRID,GRID);
   surface1 = new ArrayIsoSurface(volume);
+  
+  layer1 = (PGraphics3D) createGraphics(width, height, P3D);
 }
 
-void boxFluidDraw() {
+void boxFluidDraw() { 
   updateParticles();
   computeVolume();
 
-  pushMatrix();
-  translate(0,0,0);
-  noFill();
-  stroke(255,192);
-  strokeWeight(1);
-  box(physics.getWorldBounds().getExtent().x * 2);
+  layer1.beginDraw();
+  layer1.background(0);
+  layer1.pushMatrix();
+  layer1.translate(width/2,height/2,0);
+  layer1.noFill();
+  layer1.stroke(255,192);
+  layer1.strokeWeight(1);
+  layer1.box(physics.getWorldBounds().getExtent().x * 2);
 
-  ambientLight(216, 216, 216);
-  directionalLight(255, 255, 255, 0, 1, 0);
-  directionalLight(96, 96, 96, 1, 1, -1);
+  layer1.ambientLight(216, 216, 216);
+  layer1.directionalLight(255, 255, 255, 0, 1, 0);
+  layer1.directionalLight(96, 96, 96, 1, 1, -1);
   if (isWireFrame) {
-    stroke(255);
-    noFill();
+    layer1.stroke(255);
+    layer1.noFill();
   } else {
-    noStroke();
-    fill(224, 0, 51);
+    layer1.noStroke();
+    layer1.fill(224, 0, 51);
   }
-  beginShape(TRIANGLES);
+  layer1.beginShape(TRIANGLES);
   if (!isWireFrame) {
     drawFilledMesh();
   } else {
     drawWireMesh();
   }
-  endShape();
+  layer1.endShape();
 
-  popMatrix();
+  layer1.popMatrix();
+  layer1.endDraw();
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -119,55 +125,55 @@ void computeVolume() {
     volume.closeSides();
   }
   surface1.reset();
-  surface1.computeSurfaceMesh(mesh, isoThreshold * 0.001);
+  surface1.computeSurfaceMesh(mesh1, isoThreshold * 0.001);
 }
 
 void drawFilledMesh() {
-  int num = mesh.getNumFaces();
-  mesh.computeVertexNormals();
+  int num = mesh1.getNumFaces();
+  mesh1.computeVertexNormals();
   for(int i = 0; i < num; i++) {
-    Face f = mesh.faces.get(i);
+    Face f = mesh1.faces.get(i);
     
     Vec3D col = new Vec3D(0,0,255);//f.a.add(colAmp).scaleSelf(0.5);
-    fill(col.x,col.y,col.z);
+    layer1.fill(col.x,col.y,col.z);
     normal(f.a.normal);
     vertex(f.a);
     
     col = new Vec3D(0,127,255); //f.b.add(colAmp).scaleSelf(0.5);
-    fill(col.x,col.y,col.z);
+    layer1.fill(col.x,col.y,col.z);
     normal(f.b.normal);
     vertex(f.b);
     
     col = new Vec3D(63,127,255); //f.c.add(colAmp).scaleSelf(0.5);
-    fill(col.x,col.y,col.z);
+    layer1.fill(col.x,col.y,col.z);
     normal(f.c.normal);
     vertex(f.c);
   }
 }
 
 void drawWireMesh() {
-  noFill();
-  int num = mesh.getNumFaces();
+  layer1.noFill();
+  int num = mesh1.getNumFaces();
   for (int i = 0; i < num; i++) {
-    Face f = mesh.faces.get(i);
+    Face f = mesh1.faces.get(i);
     Vec3D col = f.a.add(colAmp).scaleSelf(0.5);
-    stroke(col.x, col.y, col.z);
+    layer1.stroke(col.x, col.y, col.z);
     vertex(f.a);
     col = f.b.add(colAmp).scaleSelf(0.5);
-    stroke(col.x, col.y, col.z);
+    layer1.stroke(col.x, col.y, col.z);
     vertex(f.b);
     col = f.c.add(colAmp).scaleSelf(0.5);
-    stroke(col.x, col.y, col.z);
+    layer1.stroke(col.x, col.y, col.z);
     vertex(f.c);
   }
 }
 
 void normal(Vec3D v) {
-  normal(v.x,v.y,v.z);
+  layer1.normal(v.x,v.y,v.z);
 }
 
 void vertex(Vec3D v) {
-  vertex(v.x,v.y,v.z);
+  layer1.vertex(v.x,v.y,v.z);
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -177,7 +183,7 @@ void initPhysics() {
   physics.setWorldBounds(new AABB(new Vec3D(), new Vec3D(DIM, DIM, DIM)));
   if (surface1 != null) {
     surface1.reset();
-    mesh.clear();
+    mesh1.clear();
   }
   
   boundingSphere = new SphereConstraint(new Sphere(new Vec3D(), DIM), SphereConstraint.INSIDE);

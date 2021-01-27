@@ -1,15 +1,11 @@
-import peasy.PeasyCam;
-
-PeasyCam cam;
-
 WorldParser wp;
 Target target;
 
 void setup() {
   size(1024, 768, P3D);
-  frameRate(60);
+  bloomSetup();
+  frameRate(30);
   
-  cam = new PeasyCam(this, 300);
   wp = new WorldParser();
   
   boxFluidSetup();
@@ -17,12 +13,22 @@ void setup() {
 }
 
 void draw() { 
-  background(0);
-
-  wp.update();
+  background(127);
   
+  wp.update();
   boxFluidDraw();
   noiseDraw();
+
+  tex.beginDraw();
+  tex.background(0);
+  
+  tex.tint(255, 40);
+  tex.image(layer1, 0, 0);
+  tex.noTint();
+  tex.image(layer2, 0, 0);
+  tex.endDraw();
+  
+  bloomDraw();
   
   surface.setTitle("" + frameRate);
 }

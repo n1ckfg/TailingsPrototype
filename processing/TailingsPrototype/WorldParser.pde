@@ -6,9 +6,11 @@ class WorldParser {
   
   boolean firstRun = true;
 
-  int refreshSeedInterval = 10000;
+  int refreshSeedIntervalOrig = 10000;
+  int refreshSeedIntervalTimeout = 100000; // wait to try again if the API enforces a timeout
+  int refreshSeedInterval = refreshSeedIntervalOrig;
   int lastSeedUpdate = 0;
-  int refreshEnvironmentInterval = 24*60*60*1000;
+  int refreshEnvironmentInterval = 24*60*60*1000; // once per day;
   int lastEnvironmentUpdate = 0;
       
   WorldParser() {
@@ -45,7 +47,12 @@ class WorldParser {
   }
   
   void updateSp() {
-    sp.update();    
+    try {
+      sp.update();  
+      refreshSeedInterval = refreshSeedIntervalOrig;
+    } catch (Exception e) { 
+      refreshSeedInterval = refreshSeedIntervalTimeout;
+    }
     lastSeedUpdate = millis();
   }
   

@@ -39,9 +39,11 @@ IsoSurface surface2=new ArrayIsoSurface(volume2);
 TriangleMesh mesh2;
 
 ToxiclibsSupport gfx;
+PGraphics3D layer2;
 
 void noiseSetup() {
-  gfx = new ToxiclibsSupport(this);
+  layer2 = (PGraphics3D) createGraphics(width, height, P3D);
+  gfx = new ToxiclibsSupport(this, layer2);
 }
 
 void noiseDraw() {
@@ -71,19 +73,23 @@ void noiseDraw() {
   // store in IsoSurface and compute surface mesh for the given threshold value
   surface2.reset();
   mesh2 = (TriangleMesh) surface2.computeSurfaceMesh(mesh2, ISO_THRESHOLD);
+  
+  layer2.beginDraw();
+  layer2.pushMatrix();
+  layer2.translate(width/2, height/2, 0);
 
-  translate(0,0,0);
-
-  scale(currScale);
+  layer2.scale(currScale);
 
   
   if (isWireframe) {
-    stroke(255);
-    noFill();
+    layer2.stroke(255);
+    layer2.noFill();
   } else {
-    noStroke();
-    fill(255);
+    layer2.noStroke();
+    layer2.fill(255);
   }
   
   gfx.mesh(mesh2,true);
+  layer2.popMatrix();
+  layer2.endDraw();
 }
