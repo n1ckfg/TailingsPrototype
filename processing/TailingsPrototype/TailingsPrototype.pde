@@ -6,15 +6,20 @@ WorldParser wp;
 
 void setup() {
   size(1024, 768, P3D);
-  cam = new PeasyCam(this, 400);
+  frameRate(60);
+  pixelDensity(1);
+  cam = new PeasyCam(this, 300);
   wp = new WorldParser();
+  
+  boxFluidSetup();
+  noiseSetup();
 }
 
 void draw() {
   background(0);
   
-  pushMatrix();
-  translate(0, 0, 200);
-  box(40);
-  popMatrix();
+  boxFluidDraw();
+  noiseDraw();
+  
+  surface.setTitle("" + frameRate);
 }

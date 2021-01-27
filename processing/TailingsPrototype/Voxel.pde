@@ -1,6 +1,0 @@
-class Voxel {
-  
-  Voxel() {
-  }
-  
-}
