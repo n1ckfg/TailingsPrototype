@@ -71,6 +71,7 @@ void boxFluidDraw() {
   layer1.background(0);
   layer1.pushMatrix();
   layer1.translate(width/2,height/2,0);
+  layer1.rotateY(globalRot);
   layer1.noFill();
   layer1.stroke(255,192);
   layer1.strokeWeight(1);

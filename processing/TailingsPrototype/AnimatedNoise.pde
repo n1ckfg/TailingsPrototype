@@ -23,14 +23,16 @@ import toxi.volume.*;
 import toxi.math.noise.*;
 import toxi.processing.*;
 
-int DIMX=48;
-int DIMY=48;
-int DIMZ=48;
+int dim2 = 48;
+int DIMX = dim2;
+int DIMY = dim2;
+int DIMZ = dim2;
 
 float ISO_THRESHOLD = 0.1;
 float NS=0.03;
 Vec3D SCALE2 = new Vec3D(1,1,1).scaleSelf(400);
 
+boolean seedDebug = true;
 boolean isWireframe = false;
 float currScale = 1;
 
@@ -61,7 +63,7 @@ void noiseDraw() {
     } 
   }
   */
-  if (wp.sp.changed) {
+  if (wp.sp.changed || (seedDebug && random(1) < 0.01)) {
     wp.sp.changed = false;
     int loc = (int) random(volumeData.length);
     float val = 1;
@@ -75,9 +77,10 @@ void noiseDraw() {
   mesh2 = (TriangleMesh) surface2.computeSurfaceMesh(mesh2, ISO_THRESHOLD);
   
   layer2.beginDraw();
+  layer2.clear();
   layer2.pushMatrix();
   layer2.translate(width/2, height/2, 0);
-
+  layer2.rotateY(globalRot);
   layer2.scale(currScale);
 
   
