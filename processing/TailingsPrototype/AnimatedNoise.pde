@@ -48,16 +48,22 @@ void noiseSetup() {
 void noiseDraw() {
   float[] volumeData=volume2.getData();
   // fill volume with noise
-  for (int z=0,index=0; z<DIMZ; z++) {
+  /*
+  for (int z=0; z<DIMZ; z++) {
     for (int y=0; y<DIMY; y++) {
       for (int x=0; x<DIMX; x++) {
         //float val = (float) SimplexNoise.noise(x * NS, y * NS, z * NS, frameCount * NS) * 0.5;
         float val = 0;
-        if (random(1) < 0.001) val = sin(frameCount * NS) * 0.5;
+        if (x == 2) val = 1;
         volumeData[index++] = val;
       } 
     } 
   }
+  */
+  int loc = (int) random(volumeData.length);
+  int val = 0;
+  if (random(1) < 0.33) val = 1;
+  volumeData[loc] = val;
   
   volume2.closeSides();
   

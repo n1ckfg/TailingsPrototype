@@ -2,46 +2,159 @@ class WorldParser {
   
   EnvironmentParser ep;
   SeedParser sp;
+  boolean firstRun = true;
 
+  int refreshSeedInterval = 10000;
+  int lastSeedUpdate = 0;
+  int refreshEnvironmentInterval = 24*60*60*1000;
+  int lastEnvironmentUpdate = 0;
+  
+  Vec3D ethPosition, btcPosition;
+  
   WorldParser() {
     ep = new EnvironmentParser();
-    sp = new SeedParser();
+    sp = new SeedParser();   
+  }
+  
+  void update() {
+    if (firstRun) {
+      updateEp();
+      updateSp();
+      firstRun = false;
+    }
+    
+    if (millis() > lastEnvironmentUpdate + refreshEnvironmentInterval) {
+      updateEp();
+    }
+    
+    if (millis() > lastSeedUpdate + refreshSeedInterval) {
+      updateSp();
+    }
+  }
+  
+  void updateEp() {
+    ep.update();
+    lastEnvironmentUpdate = millis();
+  }
+  
+  void updateSp() {
+    sp.update();
+    lastSeedUpdate = millis();
+
+    double btcPositionMax = (double) sp.btc_height / (double) ep.btcCurrentCirculation;
+    println(btcPositionMax);
+  }
+  
+  long mapLong(long value, long min1, long max1, long min2, long max2) {
+    return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
   }
 
+  double mapDouble(double value, double min1, double max1, double min2, double max2) {
+    return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+  }
+  
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class EnvironmentParser {
   
-  String ethEnvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqp3uM7s0sq75YKWPfLx76bmZpp5z6df-iiMlM-n3GDsIqKhbyjqgu0L4gPWR3I3E2HfVRU8ERZ0Mr/pub?gid=0&single=true&output=csv"; //"https://digiconomist.net/ethereum-energy-consumption";
-  Table ethTable;
+  String ethCirculationUrl = "https://api.blockchair.com/ethereum/blocks?a=date,sum(generation)";
+  JSONObject ethCirculationJson;
+  
+  String ethEnergyUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqp3uM7s0sq75YKWPfLx76bmZpp5z6df-iiMlM-n3GDsIqKhbyjqgu0L4gPWR3I3E2HfVRU8ERZ0Mr/pub?gid=0&single=true&output=csv"; //"https://digiconomist.net/ethereum-energy-consumption";
+  Table ethEnergyTable;
 
-  String btcEnvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRyoqMKaNKl0KD2TIyRshcHv00gPjkXF5BaEW6ADVFH1ikTwwZkxDLmbdAxCFHvjdJxHv_t40U7R7s/pub?gid=0&single=true&output=csv"; //"https://digiconomist.net/bitcoin-energy-consumption";
-  Table btcTable;
+  String btcCirculationUrl = "https://api.blockchair.com/bitcoin/blocks?a=date,sum(generation)";
+  JSONObject btcCirculationJson;
+
+  String btcEnergyUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRyoqMKaNKl0KD2TIyRshcHv00gPjkXF5BaEW6ADVFH1ikTwwZkxDLmbdAxCFHvjdJxHv_t40U7R7s/pub?gid=0&single=true&output=csv"; //"https://digiconomist.net/bitcoin-energy-consumption";
+  Table btcEnergyTable;
+  
+  float btcCurrentEnergy, ethCurrentEnergy;
+  long ethCurrentCirculation, btcCurrentCirculation;
   
   EnvironmentParser() {
-    ethTable = loadTable(ethEnvUrl, "csv, header");
-    for (TableRow row : ethTable.rows()) {
-      String date = row.getString("Date");
-      float estTWh = row.getFloat("Estimated TWh per Year");
-      if (Float.isNaN(estTWh)) estTWh = 0;
-      float minTWh = row.getFloat("Minimum TWh per Year");
-      if (Float.isNaN(minTWh)) minTWh = 0;
-    }
+    //
+  }
+  
+  void update() {
+    println("1/8 Downloading ETH circulation");
+    ethCirculationJson = loadJSONObject(ethCirculationUrl);
 
-    btcTable = loadTable(btcEnvUrl, "csv, header");
-    for (TableRow row :btcTable.rows()) {
+    println("2/8 Downloading ETH energy");
+    ethEnergyTable = loadTable(ethEnergyUrl, "csv, header");
+
+    println("3/8 Downloading BTC circulation");    
+    btcCirculationJson = loadJSONObject(btcCirculationUrl);
+
+    println("4/8 Downloading BTC energy");
+    btcEnergyTable = loadTable(btcEnergyUrl, "csv, header");
+
+    println("...");
+
+    println("5/8 Parsing ETH circulation");
+    JSONArray ethCirculationData = ethCirculationJson.getJSONArray("data");
+    ethCurrentCirculation = (long) ethCirculationData.getJSONObject(ethCirculationData.size()-1).getDouble("sum(generation)");
+    /*
+    for (int i=0; i<ethCirculationData.size(); i++) {
+      JSONObject obj = ethCirculationData.getJSONObject(i);
+      String date = obj.getString("date");
+      float generation_f = obj.getFloat("sum(generation)");
+      if (Float.isNaN(generation_f)) generation_f = 0;
+      int generation = (int) generation_f;
+    }
+    */
+
+    println("6/8 Parsing ETH energy");
+    ethCurrentEnergy = ethEnergyTable.getRow(ethEnergyTable.getRowCount()-1).getFloat("Estimated TWh per Year");
+    /*
+    for (TableRow row : ethEnergyTable.rows()) {
       String date = row.getString("Date");
       float estTWh = row.getFloat("Estimated TWh per Year");
       if (Float.isNaN(estTWh)) estTWh = 0;
       float minTWh = row.getFloat("Minimum TWh per Year");
       if (Float.isNaN(minTWh)) minTWh = 0;
     }
+    */
+
+    println("7/8 Parsing BTC circulation");    
+    JSONArray btcCirculationData = btcCirculationJson.getJSONArray("data");
+    btcCurrentCirculation = (long) btcCirculationData.getJSONObject(btcCirculationData.size()-1).getDouble("sum(generation)");
+    /*
+    for (int i=0; i<btcCirculationData.size(); i++) {
+      JSONObject obj = btcCirculationData.getJSONObject(i);
+      String date = obj.getString("date");
+      float generation_f = obj.getFloat("sum(generation_approximate)");
+      if (Float.isNaN(generation_f)) generation_f = 0;
+      int generation = (int) generation_f;
+    }
+    */
+
+    println("8/8 Parsing BTC energy");
+    btcCurrentEnergy = btcEnergyTable.getRow(btcEnergyTable.getRowCount()-1).getFloat("Estimated TWh per Year");
+    
+    /*
+    for (TableRow row :btcEnergyTable.rows()) {
+      String date = row.getString("Date");
+      float estTWh = row.getFloat("Estimated TWh per Year");
+      if (Float.isNaN(estTWh)) estTWh = 0;
+      float minTWh = row.getFloat("Minimum TWh per Year");
+      if (Float.isNaN(minTWh)) minTWh = 0;
+    }
+    */
+    
+    println("READY: " + ethCurrentCirculation + " " + ethCurrentEnergy + " "  + btcCurrentCirculation + " " + btcCurrentEnergy);
   }
   
   /* Notes:
-  Date, Estimated TWh per Year, Minimum TWh per Year
+  eth
+  Circulation: date, sum(generation)
+  Energy: Date, Estimated TWh per Year, Minimum TWh per Year
+  
+  btc
+  Circulation: date, sum(generation)
+  Energy: Date, Estimated TWh per Year, Minimum TWh per Year
   */
     
 }
@@ -56,14 +169,20 @@ class SeedParser {
   String btcSeedUrl = "https://api.blockcypher.com/v1/btc/main";
   JSONObject btcJson;
   
-  int eth_peer_count, btc_peer_count;
+  int eth_height, btc_height;
   
   SeedParser() {
+    //
+  }
+  
+  void update() {
     ethJson = loadJSONObject(btcSeedUrl);
     btcJson = loadJSONObject(ethSeedUrl);
 
-    eth_peer_count = ethJson.getInt("peer_count");
-    btc_peer_count = btcJson.getInt("peer_count");
+    eth_height = ethJson.getInt("height");
+    btc_height = btcJson.getInt("height");
+    
+    println(eth_height + " " + btc_height);
   }
   
 }
