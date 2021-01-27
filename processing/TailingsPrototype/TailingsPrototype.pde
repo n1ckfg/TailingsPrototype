@@ -3,11 +3,12 @@ import peasy.PeasyCam;
 PeasyCam cam;
 
 WorldParser wp;
+Target target;
 
 void setup() {
   size(1024, 768, P3D);
   frameRate(60);
-  pixelDensity(1);
+  
   cam = new PeasyCam(this, 300);
   wp = new WorldParser();
   
@@ -15,11 +16,11 @@ void setup() {
   noiseSetup();
 }
 
-void draw() {
+void draw() { 
   background(0);
 
-  //wp.update();
-
+  wp.update();
+  
   boxFluidDraw();
   noiseDraw();
   

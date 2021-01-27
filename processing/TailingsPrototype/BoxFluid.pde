@@ -84,8 +84,7 @@ void boxFluidDraw() {
   beginShape(TRIANGLES);
   if (!isWireFrame) {
     drawFilledMesh();
-  } 
-  else {
+  } else {
     drawWireMesh();
   }
   endShape();
@@ -120,7 +119,7 @@ void computeVolume() {
     volume.closeSides();
   }
   surface1.reset();
-  surface1.computeSurfaceMesh(mesh,isoThreshold*0.001);
+  surface1.computeSurfaceMesh(mesh, isoThreshold * 0.001);
 }
 
 void drawFilledMesh() {
@@ -180,6 +179,7 @@ void initPhysics() {
     surface1.reset();
     mesh.clear();
   }
+  
   boundingSphere = new SphereConstraint(new Sphere(new Vec3D(), DIM), SphereConstraint.INSIDE);
   gravity = new GravityBehavior3D(new Vec3D(0, 1, 0));
   physics.addBehavior(gravity);
@@ -187,15 +187,24 @@ void initPhysics() {
 
 void updateParticles() {
   Vec3D grav = Vec3D.Y_AXIS.copy();
-  grav.rotateX(sin(frameCount * 0.01)); //grav.rotateX(mouseY * 0.01);
-  grav.rotateY(cos(frameCount * 0.01)); //grav.rotateY(mouseX * 0.01);
+  // 1. subtle cycle
+  //grav.rotateX(sin(frameCount * 0.01)); 
+  //grav.rotateY(cos(frameCount * 0.01)); 
+  // 2. follow mouse
+  //grav.rotateX(mouseY * 0.01);
+  //grav.rotateY(mouseX * 0.01);
+  // 3. randomize
+  grav.rotateX(wp.target.pos.y * 0.01);
+  grav.rotateY(wp.target.pos.x * 0.01);
   gravity.setForce(grav.scaleSelf(2));
   numP = physics.particles.size();
+  
   if (random(1) < 0.2 && numP < NUM_PARTICLES) {
     VerletParticle3D p = new VerletParticle3D(new Vec3D(random(-1, 1) * 10, -DIM, random(-1, 1) * 10));
     if (useBoundary) p.addConstraint(boundingSphere);
     physics.addParticle(p);
   }
+  
   if (numP > 10 && physics.springs.size() < 1400) {
     for(int i=0; i<60; i++) {
       if (random(1) < 0.04) {
@@ -212,5 +221,6 @@ void updateParticles() {
   for (VerletSpring3D s : physics.springs) {
     s.setRestLength(random(0.9, 1.1) * len);
   }
+  
   physics.update();
 }

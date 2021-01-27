@@ -41,7 +41,6 @@ TriangleMesh mesh2;
 ToxiclibsSupport gfx;
 
 void noiseSetup() {
-  //size(1024,576,P3D);
   gfx = new ToxiclibsSupport(this);
 }
 
@@ -60,10 +59,12 @@ void noiseDraw() {
     } 
   }
   */
-  int loc = (int) random(volumeData.length);
-  int val = 0;
-  if (random(1) < 0.33) val = 1;
-  volumeData[loc] = val;
+  if (wp.sp.changed) {
+    wp.sp.changed = false;
+    int loc = (int) random(volumeData.length);
+    float val = 1;
+    volumeData[loc] = val;
+  }
   
   volume2.closeSides();
   

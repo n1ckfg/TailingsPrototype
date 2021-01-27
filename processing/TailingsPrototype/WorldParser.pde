@@ -2,18 +2,19 @@ class WorldParser {
   
   EnvironmentParser ep;
   SeedParser sp;
+  Target target;
+  
   boolean firstRun = true;
 
   int refreshSeedInterval = 10000;
   int lastSeedUpdate = 0;
   int refreshEnvironmentInterval = 24*60*60*1000;
   int lastEnvironmentUpdate = 0;
-  
-  Vec3D ethPosition, btcPosition;
-  
+      
   WorldParser() {
     ep = new EnvironmentParser();
-    sp = new SeedParser();   
+    sp = new SeedParser(); 
+    target = new Target(width, height);
   }
   
   void update() {
@@ -30,19 +31,22 @@ class WorldParser {
     if (millis() > lastSeedUpdate + refreshSeedInterval) {
       updateSp();
     }
+    
+    target.update();
   }
   
   void updateEp() {
     ep.update();
+    
+    target.speed = (ep.ethCurrentEnergy + ep.btcCurrentEnergy) * 0.0002;
+    println("Target speed: " + target.speed);
+    
     lastEnvironmentUpdate = millis();
   }
   
   void updateSp() {
-    sp.update();
+    sp.update();    
     lastSeedUpdate = millis();
-
-    double btcPositionMax = (double) sp.btc_height / (double) ep.btcCurrentCirculation;
-    println(btcPositionMax);
   }
   
   long mapLong(long value, long min1, long max1, long min2, long max2) {
@@ -90,6 +94,8 @@ class EnvironmentParser {
     
     println("* Downloading BTC circulation data");
     btcCirculationJson = loadJSONObject(btcCirculationUrl);
+    
+    parseCirculation();
   }
   
   void getEnergy() {
@@ -98,6 +104,8 @@ class EnvironmentParser {
     
     println("* Downloading BTC energy data");
     btcEnergyTable = loadTable(btcEnergyUrl, "csv, header");
+    
+    parseEnergy();
   }
   
   void parseCirculation() {
@@ -112,6 +120,8 @@ class EnvironmentParser {
       ethCirculationArray = circulationFromJson(ethCirculationData);
       btcCirculationArray = circulationFromJson(btcCirculationData);
     }
+
+    println(">> Circulation: " + ethCurrentCirculation + " " + btcCurrentCirculation);
   }
   
   long circulationFromJsonLatest(JSONArray data) {
@@ -137,10 +147,21 @@ class EnvironmentParser {
       ethEnergyArray = energyFromCsv(ethEnergyTable);
       btcEnergyArray = energyFromCsv(btcEnergyTable);
     }
+
+    println(">> Energy: " + ethCurrentEnergy + " " + btcCurrentEnergy);
   }
   
   float energyFromCsvLatest(Table table) {
-    return table.getRow(table.getRowCount()-1).getFloat("Estimated TWh per Year");
+    float returns = 0;
+    int index = table.getRowCount()-1;
+    
+    while (returns == 0 && index > 0) {
+      returns = table.getRow(index).getFloat("Estimated TWh per Year");
+      if (Float.isNaN(returns)) returns = 0;
+      index--;
+    }
+    
+    return returns;
   }
   
   float[] energyFromCsv(Table table) {
@@ -157,24 +178,9 @@ class EnvironmentParser {
   }
   
   void update() {
-    getEnergy();
-    if (doCirculation) {
-      getCirculation();
-      println("READY: " + ethCurrentCirculation + " " + ethCurrentEnergy + " " + btcCurrentCirculation + " " + btcCurrentEnergy);
-    } else {
-      println("READY: " + ethCurrentEnergy + " " + btcCurrentEnergy);
-    }
+    getEnergy();    
+    if (doCirculation) getCirculation();
   }
-  
-  /* Notes:
-  eth
-  Circulation: date, sum(generation)
-  Energy: Date, Estimated TWh per Year, Minimum TWh per Year
-  
-  btc
-  Circulation: date, sum(generation)
-  Energy: Date, Estimated TWh per Year, Minimum TWh per Year
-  */
     
 }
 
@@ -188,7 +194,12 @@ class SeedParser {
   String btcSeedUrl = "https://api.blockcypher.com/v1/btc/main";
   JSONObject btcJson;
   
-  int eth_height, btc_height;
+  int eth_height = 0;
+  int btc_height = 0;
+  int last_eth_height = 0;
+  int last_btc_height = 0;
+  
+  boolean changed = false;
   
   SeedParser() {
     //
@@ -197,16 +208,51 @@ class SeedParser {
   void update() {
     ethJson = loadJSONObject(btcSeedUrl);
     btcJson = loadJSONObject(ethSeedUrl);
-
+    
+    last_eth_height = 0 + eth_height;
+    last_btc_height = 0 + btc_height;
     eth_height = ethJson.getInt("height");
     btc_height = btcJson.getInt("height");
     
-    println(eth_height + " " + btc_height);
+    changed = last_eth_height != eth_height || last_btc_height != btc_height;
+    
+    println(eth_height + " " + btc_height + " " + last_eth_height + " " + last_btc_height);
+  }
+  
+}
+
+class Target {
+  
+  int w, h;
+  PVector pos;
+  PVector goal;
+  float speed = 0.1;
+  float minDist = 2;
+  
+  Target(int _w, int _h) {
+    w = _w;
+    h = _h;
+    pos = new PVector(random(w), random(h));
+    init();
+  }
+  
+  void init() {
+    goal = new PVector(random(w), random(h));
+  }
+  
+  void update() {
+    pos = PVector.lerp(pos, goal, speed);
+    if (PVector.dist(pos, goal) < minDist) init();
   }
   
 }
 
 /* Notes:
+  
+eth
+Circulation: date, sum(generation)
+Energy: Date, Estimated TWh per Year, Minimum TWh per Year 
+
 {
   "name": "ETH.main",
   "height": 11734007,
@@ -224,6 +270,10 @@ class SeedParser {
   "last_fork_hash": "b18448f592e1f1c2bb43072eb960f599332712f2dea19cea3195df1e6b610fa4"
 }
 
+btc
+Circulation: date, sum(generation)
+Energy: Date, Estimated TWh per Year, Minimum TWh per Year
+  
 {
   "name": "BTC.main",
   "height": 667818,
