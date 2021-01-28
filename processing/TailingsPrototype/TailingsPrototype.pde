@@ -23,11 +23,16 @@ void draw() {
 
   tex.beginDraw();
   tex.background(0);
+
+  tex.tint(60 + random(15));
+  tex.image(layer0, 0, 0);
   
   tex.tint(200, 255, 200, 40);
   tex.image(layer1, 0, 0);
+  
   tex.tint(200 + random(55), 200);
   tex.image(layer2, 0, 0);
+  
   tex.endDraw();
   
   bloomDraw();

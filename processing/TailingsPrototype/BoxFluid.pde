@@ -53,13 +53,14 @@ boolean isClosed = true;
 boolean useBoundary = true;
 
 Vec3D colAmp = new Vec3D(400, 200, 200);
-PGraphics3D layer1;
+PGraphics3D layer0, layer1;
 
 void boxFluidSetup() {
   initPhysics();
   volume = new VolumetricSpaceArray(SCALE,GRID,GRID,GRID);
   surface1 = new ArrayIsoSurface(volume);
   
+  layer0 = (PGraphics3D) createGraphics(width, height, P3D);
   layer1 = (PGraphics3D) createGraphics(width, height, P3D);
 }
 
@@ -67,15 +68,26 @@ void boxFluidDraw() {
   updateParticles();
   computeVolume();
 
+  layer0.beginDraw();
+  layer0.background(0);
+  layer0.pushMatrix();
+  layer0.translate(width/2,height/2,0);
+  layer0.rotateY(globalRot);
+  layer0.noFill();
+  layer0.stroke(255,92);
+  layer0.strokeWeight(1);
+  layer0.box(physics.getWorldBounds().getExtent().x * 2);
+  layer0.popMatrix();
+  layer0.endDraw();
+  
   layer1.beginDraw();
-  layer1.background(0);
+  layer1.clear();
   layer1.pushMatrix();
   layer1.translate(width/2,height/2,0);
   layer1.rotateY(globalRot);
   layer1.noFill();
-  layer1.stroke(255,192);
+  layer1.stroke(255);
   layer1.strokeWeight(1);
-  layer1.box(physics.getWorldBounds().getExtent().x * 2);
 
   layer1.ambientLight(216, 216, 216);
   layer1.directionalLight(255, 255, 255, 0, 1, 0);
