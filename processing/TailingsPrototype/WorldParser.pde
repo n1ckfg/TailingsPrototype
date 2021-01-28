@@ -1,4 +1,4 @@
-class WorldParser {
+class WorldParser extends Thread {
   
   EnvironmentParser ep;
   SeedParser sp;
@@ -22,25 +22,27 @@ class WorldParser {
     target = new Target(width, height);
   }
   
-  void update() {
-    if (firstRun) {
-      updateEp();
-      updateSp();
-      firstRun = false;
+  void run() {
+    while (true) {
+      if (firstRun) {
+        updateEp();
+        updateSp();
+        firstRun = false;
+      }
+      
+      if (millis() > lastEnvironmentUpdate + refreshEnvironmentInterval) {
+        updateEp();
+      }
+      
+      if (millis() > lastSeedUpdate + refreshSeedInterval) {
+        updateSp();
+      }
+      
+      // if the api call fails, estimate the result
+      if (seedDebug && random(1) < seedDebugOdds) sp.changed = true;
+  
+      target.update();
     }
-    
-    if (millis() > lastEnvironmentUpdate + refreshEnvironmentInterval) {
-      updateEp();
-    }
-    
-    if (millis() > lastSeedUpdate + refreshSeedInterval) {
-      updateSp();
-    }
-    
-    // if the api call fails, estimate the result
-    if (seedDebug && random(1) < seedDebugOdds) sp.changed = true;
-
-    target.update();
   }
   
   void updateEp() {

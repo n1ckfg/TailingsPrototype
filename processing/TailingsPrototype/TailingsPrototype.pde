@@ -8,6 +8,7 @@ void setup() {
   frameRate(30);
   
   wp = new WorldParser();
+  wp.start();
   
   boxFluidSetup();
   noiseSetup();
@@ -17,7 +18,6 @@ void setup() {
 void draw() { 
   background(127);
   
-  wp.update();
   boxFluidDraw();
   noiseDraw();
 
