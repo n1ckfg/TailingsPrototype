@@ -88,7 +88,7 @@ void noiseDraw() {
     layer2.noFill();
   } else {
     layer2.noStroke();
-    layer2.fill(255);
+    layer2.fill(255, 63, 0);
   }
   
   gfx.mesh(mesh2,true);
