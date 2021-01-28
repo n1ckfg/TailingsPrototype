@@ -7,7 +7,7 @@ class WorldParser extends Thread {
   boolean firstRun = true;
 
   int refreshSeedIntervalOrig = 10000;
-  int refreshSeedIntervalTimeout = 100000; // wait longer to try again if the API enforces a timeout
+  int refreshSeedIntervalTimeout = 10000; // option to wait longer to try again if the API enforces a timeout
   int refreshSeedInterval = refreshSeedIntervalOrig;
   int lastSeedUpdate = 0;
   int refreshEnvironmentInterval = 24*60*60*1000; // once per day;
@@ -23,7 +23,7 @@ class WorldParser extends Thread {
   }
   
   void run() {
-    while (true) {
+    while (true) {     
       if (firstRun) {
         updateEp();
         updateSp();
@@ -39,7 +39,7 @@ class WorldParser extends Thread {
       }
       
       // if the api call fails, estimate the result
-      if (seedDebug && random(1) < seedDebugOdds) sp.changed = true;
+      if (seedDebug) sp.changed = random(1) < seedDebugOdds;
   
       target.update();
     }

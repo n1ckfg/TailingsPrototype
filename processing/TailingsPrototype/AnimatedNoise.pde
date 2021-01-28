@@ -35,6 +35,9 @@ Vec3D SCALE2 = new Vec3D(1,1,1).scaleSelf(400);
 boolean isWireframe = false;
 float currScale = 1;
 
+float voxMinSize = 0.4;
+float voxMaxSize = 0.8;
+
 // http://toxiclibs.org/docs/volumeutils/
 VolumetricSpaceArray volume2 = new VolumetricSpaceArray(SCALE2,DIMX,DIMY,DIMZ);
 IsoSurface surface2=new ArrayIsoSurface(volume2);
@@ -55,14 +58,15 @@ void noiseDraw() {
     for (int y=0; y<DIMY; y++) {
       for (int x=0; x<DIMX; x++) {
         float vox = volume2.getVoxelAt(x, y, z);
-        if (vox > random(0.4, 0.8)) {
+        if (vox > random(voxMinSize, voxMaxSize)) {
           float val = (float) SimplexNoise.noise(x * NS, y * NS, z * NS, frameCount * NS) * 0.5;
           int rnd_x = int(random(3)) - 1;
           int rnd_y = int(random(3)) - 1;
           int rnd_z = int(random(3)) - 1;
-
           volume2.setVoxelAt(x + rnd_x, y + rnd_y, z + rnd_z, val);
-        }
+        } else if (vox < voxMinSize && vox > 0) {
+          volume2.setVoxelAt(x, y, z, voxMinSize);
+        } 
       } 
     } 
   }
