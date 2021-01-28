@@ -49,24 +49,24 @@ void noiseSetup() {
 
 void noiseDraw() {
   float[] volumeData=volume2.getData();
+  
   // fill volume with noise
   /*
   for (int z=0; z<DIMZ; z++) {
     for (int y=0; y<DIMY; y++) {
       for (int x=0; x<DIMX; x++) {
         //float val = (float) SimplexNoise.noise(x * NS, y * NS, z * NS, frameCount * NS) * 0.5;
-        float val = 0;
-        if (x == 2) val = 1;
-        volumeData[index++] = val;
+        int loc = x * y * z;
+        float val = volumeData[loc];
       } 
     } 
   }
   */
+  
   if (wp.sp.changed) {
     wp.sp.changed = false;
     int loc = (int) random(volumeData.length);
-    float val = 1;
-    volumeData[loc] = val;
+    volumeData[loc] = 1;
   }
   
   volume2.closeSides();
