@@ -29,6 +29,8 @@ import toxi.volume.*;
 import java.util.Iterator;
 import controlP5.*;
 
+float gravityScaler = 1;
+
 int NUM_PARTICLES = 100; //200;
 float REST_LENGTH = 375;
 int DIM = 200;
@@ -207,14 +209,14 @@ void initPhysics() {
 void updateParticles() {
   Vec3D grav = Vec3D.Y_AXIS.copy();
   // 1. subtle cycle
-  //grav.rotateX(sin(frameCount * 0.01)); 
-  //grav.rotateY(cos(frameCount * 0.01)); 
+  //grav.rotateX(sin(frameCount * gravityScaler)); 
+  //grav.rotateY(cos(frameCount * gravityScaler)); 
   // 2. follow mouse
-  //grav.rotateX(mouseY * 0.01);
-  //grav.rotateY(mouseX * 0.01);
+  //grav.rotateX(mouseY * gravityScaler);
+  //grav.rotateY(mouseX * gravityScaler);
   // 3. randomize
-  grav.rotateX(wp.target.pos.y * 0.01);
-  grav.rotateY(wp.target.pos.x * 0.01);
+  grav.rotateX(wp.target.pos.y * gravityScaler);
+  grav.rotateY(wp.target.pos.x * gravityScaler);
   gravity.setForce(grav.scaleSelf(2));
   numP = physics.particles.size();
   

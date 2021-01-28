@@ -35,6 +35,7 @@ Vec3D SCALE2 = new Vec3D(1,1,1).scaleSelf(400);
 boolean isWireframe = false;
 float currScale = 1;
 
+// http://toxiclibs.org/docs/volumeutils/
 VolumetricSpaceArray volume2 = new VolumetricSpaceArray(SCALE2,DIMX,DIMY,DIMZ);
 IsoSurface surface2=new ArrayIsoSurface(volume2);
 TriangleMesh mesh2;
@@ -48,25 +49,35 @@ void noiseSetup() {
 }
 
 void noiseDraw() {
-  float[] volumeData=volume2.getData();
+  //float[] volumeData=volume2.getData();
   
-  // fill volume with noise
-  /*
   for (int z=0; z<DIMZ; z++) {
     for (int y=0; y<DIMY; y++) {
       for (int x=0; x<DIMX; x++) {
-        //float val = (float) SimplexNoise.noise(x * NS, y * NS, z * NS, frameCount * NS) * 0.5;
-        int loc = x * y * z;
-        float val = volumeData[loc];
+        float vox = volume2.getVoxelAt(x, y, z);
+        if (vox > random(0.4, 0.8)) {
+          float val = (float) SimplexNoise.noise(x * NS, y * NS, z * NS, frameCount * NS) * 0.5;
+          int rnd_x = int(random(3)) - 1;
+          int rnd_y = int(random(3)) - 1;
+          int rnd_z = int(random(3)) - 1;
+
+          volume2.setVoxelAt(x + rnd_x, y + rnd_y, z + rnd_z, val);
+        }
       } 
     } 
+  }
+  
+  /*
+  if (wp.sp.changed) {
+    wp.sp.changed = false;
+    int loc = (int) random(volumeData.length);
+    volumeData[loc] = 1;
   }
   */
   
   if (wp.sp.changed) {
     wp.sp.changed = false;
-    int loc = (int) random(volumeData.length);
-    volumeData[loc] = 1;
+    volume2.setVoxelAt(int(random(DIMX)), int(random(DIMY)), int(random(DIMZ)), 1);
   }
   
   volume2.closeSides();
@@ -88,7 +99,7 @@ void noiseDraw() {
     layer2.noFill();
   } else {
     layer2.noStroke();
-    layer2.fill(255, 63, 0);
+    layer2.fill(200 + random(55), 100, random(10));
   }
   
   gfx.mesh(mesh2,true);
