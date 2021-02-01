@@ -160,7 +160,7 @@ public class CylinderGenerator : MonoBehaviour {
         }
 
         mesh.triangles = FinalTri;
-        mesh.Optimize();
+        //mesh.Optimize();
         mesh.RecalculateNormals();
         mf.mesh = mesh;
     }
