@@ -1,0 +1,6 @@
+[submodule "threejs/TailingsPrototype/js/libraries/util.js"]
+	path = threejs/TailingsPrototype/js/libraries/util.js
+	url = https://github.com/n1ckfg/util.js
+[submodule "unity/TailingsPrototype/Assets/latkUnity"]
+	path = unity/TailingsPrototype/Assets/latkUnity
+	url = https://github.com/LightningArtist/latkUnity
