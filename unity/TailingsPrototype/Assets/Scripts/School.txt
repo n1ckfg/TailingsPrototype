@@ -1,0 +1,325 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class School : MonoBehaviour {
+
+    public Material mat1;
+
+    bool armRegenerate = false;
+    bool armRedmat = false;
+    int armRegenerateIndex = 0;
+
+    float meshLineWidth = 0.6f;
+    float meshLineOpacity = 0.1f;
+    int meshLineResolution = 1;
+
+    Vector3 globalScale = new Vector3(50f, -50f, 50f);
+    Vector3 globalOffset = new Vector3(-20f, 60f, -350f);
+    float globalSpeedFactor = 4f;
+    float globalSpread = 7f;
+
+    Vector3 axisX = new Vector3(1f, 0f, 0f);
+    Vector3 axisY = new Vector3(0f, 1f, 0f);
+    Vector3 axisZ = new Vector3(0f, 0f, 1f);
+
+    float triggerDistance = 35f;
+
+    float movingSpeedMax = 1.3f;
+    float movingDelta = 0.03f;
+
+    float now = 0f;
+
+    string[] lexicon = "FfXxYyZz<>(.".Split();
+    let pop = [];
+    int pop_size = 35;
+    float mutability = 0.5f;
+    int numCmds = 60;
+    float angleChange = 1.25f;
+    bool firstRun = true;
+    int maxComplexity;
+
+    private void Start() {
+        resetCameraPosition();
+        maxComplexity = numCmds * 3;
+    }
+
+    private void Update() {
+        //clearScene(scene);
+        bigPoints = [];
+
+        for (int i = 0; i < pop.length; i++) {
+            try {
+                pop[i].draw();
+
+                if (!armRegenerate && pop[i].points[0].distanceTo(Camera.main.transform.position) < triggerDistance) {
+                    Debug.Log("Selected " + i);
+                    armRegenerateIndex = i;
+                    armRegenerate = true;
+                    armRedmat = true;
+                }
+            } catch (UnityException e) {
+                Debug.Log(e);
+            }
+        }
+
+        //console.log("Total points in frame: " + bigPoints.length);
+        //bigGeoBuffer.setFromPoints(bigPoints);
+
+        if (armRegenerate) {
+            //bigLine.material.color.setHex(0xff1111);
+        } else {
+            if (UnityEngine.Random.Range(0f,1f) < 0.2) {
+                if (armRedmat) {
+                    //bigLine.material.color.setHex(0xff1111);
+                } else {
+                    //bigLine.material.color.setHex(0xffffaa);
+                }
+            } else {
+                //bigLine.material.color.setHex(0xaaffff);
+            }
+        }
+
+        //bigLine.frustumCulled = false;
+
+        updatePlayer();
+
+        if (armRegenerate) {
+            StartCoroutine("resetArmRegenerate");
+        }
+
+        if (armRedmat) {
+            StartCoroutine("resetArmRedmat");
+        }
+    }
+
+    IEnumerator resetArmRegenerate() {
+        yield return new WaitForSeconds(0.2f);
+        regenerate(armRegenerateIndex);
+        armRegenerate = false;
+    }
+
+    IEnumerator resetArmRedmat() {
+		yield return new WaitForSeconds(0.6f);
+		armRedmat = false;
+	}
+
+    void regenerate(int chosen) {
+        let newpop = [];
+        let parent = pop[chosen];
+
+        for (int i = 0; i < pop_size; i++) {
+            Child child = new Child(i);
+
+            // brain
+            if (i / pop_size < parent.brain.elitism) {
+                child.brain.nn = JSON.parse(JSON.stringify(parent.brain.nn));
+            } else {
+                child.brain.nn = parent.brain.nn.slice(0);
+
+                for (let j = 0; j < child.brain.nn.length; j++) {
+                    if (Math.random() < child.brain.mutability / child.brain.nn.length) {
+                        child.brain.nn[j] += (Math.random() * 5) - 2;
+                    }
+                }
+            }
+
+            // body
+            for (let j = 0; j < parent.cmds.length; j++) {
+                if (Math.random() < mutability / parent.cmds.length) {
+                    child.cmds[j] = lexicon[parseInt(Math.random() * lexicon.length)];
+                } else {
+                    child.cmds[j] = parent.cmds[j];
+                }
+            }
+
+            newpop.push(child);
+        }
+        pop = newpop;
+
+        resetCameraPosition();
+    }
+
+    void reset() {
+        pop = [];
+        for (let i = 0; i < pop_size; i++) {
+            pop.push(new Child(i));
+        }
+
+        if (firstRun) {
+            setupPlayer();
+            draw();
+            firstRun = false;
+        }
+    }
+
+}
+
+
+public class Turtle {
+
+    public Turtle(pos, dir, angle) {
+        this.pos = pos;
+        this.dir = dir;
+        this.angle = angle;
+    }
+
+}
+
+
+public class Child {
+
+    int index;
+    float x, y, z;
+    float randomDrift, velRange, size, timeShift, rel;
+    Vector3 pos, vel, head, tail;
+    Brain brain;
+
+    public Child(int idx) {
+        index = idx;
+        this.cmds = this.createCmds(numCmds);
+        x = UnityEngine.Random.Range(0f, 1f) - 0.5f;
+        y = UnityEngine.Random.Range(0f, 1f) - 0.5f;
+        z = UnityEngine.Random.Range(0f, 1f) - 0.5f;
+        pos = new Vector3(x, y, z / 2f).multiplyScalar(globalSpread).multiply(globalScale);
+        float randomDrift = 500 + (UnityEngine.Random.Range(0f, 500f));
+        this.points = [];
+        //this.geo = new MeshLine();
+        //this.geoBuffer = new THREE.BufferGeometry();
+        //this.newLine;
+        brain = new Brain();
+        velRange = 0.4f;
+        vel = new Vector3(UnityEngine.Random.Range(0f, 1f) * velRange, UnityEngine.Random.Range(0f, 1f) * velRange, UnityEngine.Random.Range(0f, 1f) * velRange);
+        size = triggerDistance;
+        timeShift = UnityEngine.Random.Range(0f, 0.2f);
+    }
+
+    void updateBrain() {
+        head = points[0].clone();
+        tail = points[points.Length - 1].clone();
+        float input0 = 0f;
+        float input1 = 0f;
+        float input2 = 0f;
+
+        float mindist = 20f; // 2;
+
+        // get relative vector from my head to its tail:
+        float newRel = this.tail.clone().sub(this.head).applyAxisAngle(axisZ, -this.vel.angleTo(this.head));
+        float distance = rel.length();
+        // TODO: could also limit relative angle here
+        if (distance < mindist) {
+            mindist = distance;
+
+            // update sensors, which should range from 0..1
+
+            // for distance we'd like intensity to be highest when near, lowest when far; a 1/distance-squared is good; 
+            // and made relative to our size:
+            input0 = this.size / (this.size + rel.dot(rel));
+
+            // relative angle ordinarily runs -pi...pi
+            // we can take the cosine of the angle to get -1..1
+            // then scale this to 0..1:
+            input1 = Mathf.cos(rel.angleTo(this.head)) * 0.5 + 0.5;
+
+            // 3rd input tells us whether we are closer to the head or the tail:
+            float distance2 = head.distanceTo(tail);
+            input2 = distance2 < distance ? 0 : 1;
+
+            // store relative vector here for sake of visualization later
+            rel = newRel;
+        }
+
+        // ~ ~ ~ ~ ~
+
+        brain.update(input0, input1, input2);
+        float speed = brain.outputs[0];
+        float angle = brain.outputs[1] - brain.outputs[2];
+        vel.applyAxisAngle(axisZ, angle);
+
+        //this.pos.add(this.vel);
+        pos.x += this.vel.x;
+        pos.y += Math.sin(now * 10) / this.randomDrift;
+        pos.z += this.vel.z;
+    }
+
+    void draw() {
+        Turtle turtle = new Turtle(new Vector3(0.5f, 0.9f, 0f), new Vector3(0f, 0.1f, 0f), Mathf.PI / 4f);
+
+        points = turtledraw(turtle, cmds);
+
+        updateBrain();
+
+        for (let point of this.points) {
+            point.multiply(globalScale).add(this.pos).add(globalOffset);
+            bigPoints.push(point);
+        }
+    }
+
+    createCmds(size) {
+        let geno = [];
+        for (let i = 0; i < size; i++) {
+            geno.push(lexicon[parseInt(Math.random() * lexicon.length)]);
+        }
+        return geno;
+    }
+
+    float getTimeShift(float val) {
+        return val * (Math.sin(now) + this.timeShift);
+    }
+
+    turtledraw(t, cmds) {
+        let lines = [];
+        now = clock.getElapsedTime() / globalSpeedFactor;
+        float turtleStep = 0.5f;
+
+        for (int i = 0; i < cmds.Length; i++) {
+            let cmd = cmds[i];
+
+            if (cmd == "F") {
+                // move forward, drawing a line:
+                lines.push(t.pos.clone());
+                t.pos.add(t.dir); // move
+                lines.push(t.pos.clone());
+            } else if (cmd == "f") {
+                // move forward, drawing a line:
+                lines.push(t.pos.clone());
+                t.pos.add(t.dir.clone().multiplyScalar(turtleStep));//0.5)); // move
+                lines.push(t.pos.clone());
+            } else if (cmd == "X") {
+                // rotate +x:
+                t.dir.applyAxisAngle(axisX, this.getTimeShift(t.angle));
+            } else if (cmd == "x") {
+                // rotate -x:
+                t.dir.applyAxisAngle(axisX, this.getTimeShift(-t.angle));
+            } else if (cmd == "Y") {
+                // rotate +y:
+                t.dir.applyAxisAngle(axisY, this.getTimeShift(t.angle));
+            } else if (cmd == "y") {
+                // rotate -y:
+                t.dir.applyAxisAngle(axisY, this.getTimeShift(-t.angle));
+            } else if (cmd == "Z") {
+                // rotate +z:
+                t.dir.applyAxisAngle(axisZ, this.getTimeShift(t.angle));
+            } else if (cmd == "z") {
+                // rotate -z:
+                t.dir.applyAxisAngle(axisZ, this.getTimeShift(-t.angle));
+            } else if (cmd == "<") {
+                t.angle *= angleChange;
+            } else if (cmd == ">") {
+                t.angle /= angleChange;
+            } else if (cmd == "(") {
+                // spawn a copy of the turtle:
+                Turtle t1 = new Turtle(t.pos.clone(), t.dir.clone(), -t.angle);
+
+                let morelines = this.turtledraw(t1, cmds.slice(i + 1));
+                lines = lines.concat(morelines);
+            }
+        }
+
+        if (lines.Length > maxComplexity) lines.Length = maxComplexity;
+
+        return lines;
+    }
+
+}
