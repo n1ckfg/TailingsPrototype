@@ -65,3 +65,12 @@ The following packages were updated:
   com.unity.textmeshpro from version 1.4.1 to 2.0.1
 The following packages were removed:
   com.unity.package-manager-ui@2.0.13
+
+=== Mon Feb  1 20:52:32 2021
+
+Packages were changed.
+Update Mode: updateDependencies
+
+The following packages were updated:
+  com.unity.ads from version 3.5.2 to 3.6.1
+  com.unity.multiplayer-hlapi from version 1.0.6 to 1.0.8
