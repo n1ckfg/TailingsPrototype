@@ -2,41 +2,46 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Brain : MonoBehaviour {
+public class Brain {
 
-	float[] pop;
-	float pop_size = 200f;
-	float creature_size = 1f / 100f;
+	private float[] pop;
+    private float pop_size = 200f;
+    private float creature_size = 1f / 100f;
 
-	float N = 3f;
-	float L = 3f;
+    private float N = 3f;
+    private float L = 3f;
 
-	// N+1 (to include bias) weights per neuron per layer:
-	float MAXW = 10f;
+    // N+1 (to include bias) weights per neuron per layer:
+    private float MAXW = 10f;
 
-	float gamesteps = 0f;
-	float MAX_STEPS = 500f;
+    private float gamesteps = 0f;
+    private float MAX_STEPS = 500f;
 
-	float mutability = 5f;
-	float elitism = 1f / 10f;
-	float randomized = 1f / 20f;
+    private float mutability = 5f;
+    private float elitism = 1f / 10f;
+    private float randomized = 1f / 20f;
 
-	float[] inputs = { 0f, 0f, 0f };
-	float[] outputs = { 0f, 0f, 0f };
+    private float[] inputs = { 0f, 0f, 0f };
+    private float[] outputs = { 0f, 0f, 0f };
 
-	float SPEED_MAX;
-	float NUMWEIGHTS;
-	float[] nn;
-	List<float[]> activations;
+    private float SPEED_MAX;
+    private float NUMWEIGHTS;
+    private float[] nn;
+    private List<float[]> activations;
 
-	private void Awake() {
+	public Brain() {
 		SPEED_MAX = creature_size * 10f;
 		NUMWEIGHTS = (N + 1) * N * L;
 		nn = createNN();
 		activations = createActivations();
 	}
 
-	private float sigmoid(float x) {
+    public void update(float input0, float input1, float input2) {
+        setInputs(input0, input1, input2);
+        getOutputs();
+    }
+
+    private float sigmoid(float x) {
 		return 1f / (1f + Mathf.Exp(-x));
 	}
 
@@ -60,7 +65,7 @@ public class Brain : MonoBehaviour {
 	private List<float[]> createActivations() {
 		List<float[]> activations = new List<float[]>();
 		for (int l = 0; l < this.L + 1; l++) {
-			float[] layer = new float[N];
+			float[] layer = new float[(int) N];
 			// iterate over neurons in the layer:
 			for (int n = 0; n < N; n++) {
 				layer[n] = 0;
@@ -74,18 +79,19 @@ public class Brain : MonoBehaviour {
 		activations[0] = inputVector;
 		int w = 0; // index into the weights list
 		float[] inputs = activations[0];
-		float[] outputs;
-		for (int l = 0; l < L; l++) {
+		float[] outputs = new float[activations[0].Length];
+
+        for (int l = 0; l < L; l++) {
 			// we will activate layer l+1 by the values in layer l:
 			outputs = activations[l + 1];
 			// iterate over neurons in the layer:
 			for (int n = 0; n < N; n++) {
 				// start with bias term:
-				let sum = this.nn[w++];
+				float sum = nn[w++];
 				// add the weighted inputs:
-				for (let i = 0; i < this.N; i++) {
+				for (int i = 0; i < N; i++) {
 					// use the next weight from the NN:
-					sum += inputs[i] * this.nn[w++];
+					sum += inputs[i] * nn[w++];
 				}
 				// apply activation function:
 				outputs[n] = this.sigmoid(sum);
@@ -93,7 +99,8 @@ public class Brain : MonoBehaviour {
 			// outputs becomes inputs of next round:
 			inputs = outputs;
 		}
-		return outputs;
+
+        return outputs;
 	}
 
 	private float[] setInputs(float input0, float input1, float input2) {
@@ -106,11 +113,6 @@ public class Brain : MonoBehaviour {
 	private float[] getOutputs() {
 		outputs = activate(inputs);
 		return outputs;
-	}
-
-	private void run(float input0, float input1, float input2) {
-		setInputs(input0, input1, input2);
-		getOutputs();
 	}
 
 }
