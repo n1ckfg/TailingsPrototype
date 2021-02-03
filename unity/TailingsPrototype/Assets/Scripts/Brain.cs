@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class Brain {
 
+	[HideInInspector] public List<float[]> activations;
+	[HideInInspector] public float[] outputs = { 0f, 0f, 0f };
+	[HideInInspector] public float mutability = 5f;
+	[HideInInspector] public float elitism = 1f / 10f;
+	[HideInInspector] public List<float> nn;
+
 	private float[] pop;
     private float pop_size = 200f;
     private float creature_size = 1f / 100f;
@@ -17,17 +23,12 @@ public class Brain {
     private float gamesteps = 0f;
     private float MAX_STEPS = 500f;
 
-    private float mutability = 5f;
-    private float elitism = 1f / 10f;
     private float randomized = 1f / 20f;
 
     private float[] inputs = { 0f, 0f, 0f };
-    private float[] outputs = { 0f, 0f, 0f };
 
     private float SPEED_MAX;
     private float NUMWEIGHTS;
-    private float[] nn;
-    private List<float[]> activations;
 
 	public Brain() {
 		SPEED_MAX = creature_size * 10f;
@@ -53,11 +54,11 @@ public class Brain {
 		return (Random.Range(0f, 1f) * (MAXW * 2f)) - MAXW;
 	}
 
-	private float[] createNN() {
+	private List<float> createNN() {
 		NUMWEIGHTS = (N + 1f) * N * L;
-		float[] w = new float[(int) NUMWEIGHTS];
+		List<float> w = new List<float>();
 		for (int i = 0; i < NUMWEIGHTS; i++) {
-			w[i] = randomGene();
+			w.Add(randomGene());
 		}
 		return w;
 	}
