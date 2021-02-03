@@ -13,7 +13,11 @@ public class Child {
     private float randomDrift, velRange, size, timeShift, now;
     private Vector3 pos, vel, head, tail, rel;
 
+    private School school;
+
     public Child(int idx) {
+        school = GameObject.FindGameObjectWithTag("School").GetComponent<School>();
+
         index = idx;
         cmds = createCmds(School.numCmds);
         x = UnityEngine.Random.Range(0f, 1f) - 0.5f;
@@ -85,18 +89,19 @@ public class Child {
 
     public void draw() {
         Turtle turtle = new Turtle(new Vector3(0.5f, 0.9f, 0f), new Vector3(0f, 0.1f, 0f), Mathf.PI / 4f);
+        turtledraw(turtle, cmds);
 
+        /*
         points = turtledraw(turtle, cmds);
-        Debug.Log(points.Count);
         //updateBrain();
 
         for (int i=0; i<points.Count; i++) {
             points[i].Scale(School.globalScale);
 			points[i] += pos + School.globalOffset;
-            Debug.Log("!!!!" + points[i]);
             //bigPoints.push(point);
-			// TODO draw
+            school.ld.makeLine(points);
         }
+        */
     }
 
     private List<string> createCmds(int size) {
@@ -115,11 +120,10 @@ public class Child {
     private List<Vector3> turtledraw(Turtle t, List<string> _cmds) {
         List<Vector3> lines = new List<Vector3>();
         now = Time.timeSinceLevelLoad / School.globalSpeedFactor;
-        float turtleStep = 0.5f;
+        float turtleStep = 0.5f * School.globalScale.x;
 
         for (int i=0; i<_cmds.Count; i++) {
             string cmd = _cmds[i];
-            Debug.Log(cmd);
 
             if (cmd == "F") {
                 // move forward, drawing a line:
@@ -155,14 +159,15 @@ public class Child {
                 t.angle /= School.angleChange;
             } else if (cmd == "(") {
                 // spawn a copy of the turtle:
-                Turtle t1 = new Turtle(t.pos, t.dir, -t.angle);
+                //Turtle t1 = new Turtle(t.pos, t.dir, -t.angle);
 
-                List<Vector3> morelines = turtledraw(t1, _cmds.GetRange(i + 1, _cmds.Count-1));
-                lines.AddRange(morelines);
+                //List<Vector3> morelines = turtledraw(t1, _cmds.GetRange(i, _cmds.Count-1));
+                //lines.AddRange(morelines);
             }
         }
 
         if (lines.Count > School.maxComplexity) lines.RemoveRange(School.maxComplexity, lines.Count-1);
+        school.ld.makeLine(lines);
 
         return lines;
     }

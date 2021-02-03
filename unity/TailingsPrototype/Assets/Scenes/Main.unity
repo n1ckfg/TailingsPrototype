@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 1514762052}
-  m_IndirectSpecularColor: {r: 0.36865512, g: 0.3662972, b: 0.28105912, a: 1}
+  m_IndirectSpecularColor: {r: 0.3686561, g: 0.36629763, b: 0.28105822, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -132,8 +132,8 @@ GameObject:
   - component: {fileID: 299731173}
   - component: {fileID: 299731172}
   m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
+  m_Name: SCHOOL
+  m_TagString: School
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -223,8 +223,8 @@ MonoBehaviour:
     e31: 0
     e32: 0
     e33: 0
-  strokeLife: 1
-  checkSelfDestruct: 0
+  strokeLife: 0.001
+  checkSelfDestruct: 1
 --- !u!1001 &880147365
 PrefabInstance:
   m_ObjectHideFlags: 0

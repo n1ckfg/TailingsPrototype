@@ -7,7 +7,7 @@ public class School : MonoBehaviour {
 
     public LatkDrawing ld;
 
-    [HideInInspector] public static string[] lexicon = "FfXxYyZz<>(.".Split();
+    [HideInInspector] public static string[] lexicon = "F f X x Y y Z z < > ( .".Split(' ');
     [HideInInspector] public static float triggerDistance = 35f;
     [HideInInspector] public static Vector3 globalScale = new Vector3(50f, -50f, 50f);
     [HideInInspector] public static Vector3 globalOffset = new Vector3(-20f, 60f, -350f);
