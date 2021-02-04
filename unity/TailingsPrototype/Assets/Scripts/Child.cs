@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Child {
 
-    [HideInInspector] public List<Vector3> points;
+    [HideInInspector] public List<Tentacle> tentacles;
     [HideInInspector] public Brain brain;
     [HideInInspector] public List<string> cmds;
 
@@ -26,7 +26,7 @@ public class Child {
         pos = new Vector3(x, y, z / 2f) * School.globalSpread;
 		pos.Scale(School.globalScale);
         float randomDrift = 500f + (UnityEngine.Random.Range(0f, 500f));
-        points = new List<Vector3>();
+        tentacles = new List<Tentacle>();
         //this.geo = new MeshLine();
         //this.geoBuffer = new THREE.BufferGeometry();
         //this.newLine;
@@ -38,8 +38,8 @@ public class Child {
     }
 
     private void updateBrain() {
-        head = points[0];
-        tail = points[points.Count - 1];
+        head = tentacles[0].points[0];
+        tail = tentacles[tentacles.Count - 1].points[tentacles[tentacles.Count - 1].points.Count - 1];
         float input0 = 0f;
         float input1 = 0f;
         float input2 = 0f;
@@ -92,14 +92,14 @@ public class Child {
         turtledraw(turtle, cmds);
 
         /*
-        points = turtledraw(turtle, cmds);
+        tentacles = turtledraw(turtle, cmds);
         //updateBrain();
 
-        for (int i=0; i<points.Count; i++) {
-            points[i].Scale(School.globalScale);
-			points[i] += pos + School.globalOffset;
-            //bigPoints.push(point);
-            school.ld.makeLine(points);
+        for (int i=0; i<tentacles.Count; i++) {
+            tentacles[i].Scale(School.globalScale);
+			tentacles[i] += pos + School.globalOffset;
+            //bigtentacles.push(point);
+            school.ld.makeLine(tentacles);
         }
         */
     }
@@ -118,23 +118,24 @@ public class Child {
     }
 
     private List<Vector3> turtledraw(Turtle t, List<string> _cmds) {
-        List<Vector3> lines = new List<Vector3>();
+        List<string> cmds = _cmds;
+        List<Vector3> points = new List<Vector3>();
         now = Time.timeSinceLevelLoad / School.globalSpeedFactor;
         float turtleStep = 0.5f * School.globalScale.x;
 
-        for (int i=0; i<_cmds.Count; i++) {
-            string cmd = _cmds[i];
+        for (int i=0; i<cmds.Count; i++) {
+            string cmd = cmds[i];
 
             if (cmd == "F") {
                 // move forward, drawing a line:
-                lines.Add(t.pos);
+                points.Add(t.pos);
                 t.pos += t.dir; // move
-                lines.Add(t.pos);
+                points.Add(t.pos);
             } else if (cmd == "f") {
                 // move forward, drawing a line:
-                lines.Add(t.pos);
+                points.Add(t.pos);
                 t.pos += t.dir * turtleStep; //0.5)); // move
-                lines.Add(t.pos);
+                points.Add(t.pos);
             } else if (cmd == "X") {
                 // rotate +x:
 				t.dir = Quaternion.AngleAxis(getTimeShift(t.angle), School.axisX) * t.dir;
@@ -159,17 +160,27 @@ public class Child {
                 t.angle /= School.angleChange;
             } else if (cmd == "(") {
                 // spawn a copy of the turtle:
-                //Turtle t1 = new Turtle(t.pos, t.dir, -t.angle);
+                Turtle t1 = new Turtle(t.pos, t.dir, -t.angle);
+                cmds.RemoveRange(0, i);
 
-                //List<Vector3> morelines = turtledraw(t1, _cmds.GetRange(i, _cmds.Count-1));
-                //lines.AddRange(morelines);
+                List<Vector3> morePoints = turtledraw(t1, cmds);
+                points.AddRange(morePoints);
             }
         }
 
-        if (lines.Count > School.maxComplexity) lines.RemoveRange(School.maxComplexity, lines.Count-1);
-        school.ld.makeLine(lines);
+        if (points.Count > School.maxComplexity) points.RemoveRange(School.maxComplexity, points.Count-1);
 
-        return lines;
+        return points;
+    }
+
+}
+
+public class Tentacle {
+
+    public List<Vector3> points;
+
+    public Tentacle(List<Vector3> _points) {
+        points = _points;
     }
 
 }
